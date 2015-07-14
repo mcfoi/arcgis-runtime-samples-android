@@ -10,8 +10,8 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         mapoptions.MapType="Topo"
-        mapoptions.ZoomLevel="12"
-        mapoptions.center="45.464254, 9.189999" >
+        mapoptions.ZoomLevel="11"
+        mapoptions.center="41.902783, 12.496366" >
     </com.esri.android.map.MapView>
 
 </LinearLayout>

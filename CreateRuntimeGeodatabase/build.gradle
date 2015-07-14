@@ -24,6 +24,17 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
+
+    productFlavors {
+        milano {
+            applicationId "com.esri.arcgis.android.sample.runtimegeodb.milano"
+            versionName "1.0-milano"
+        }
+        roma {
+            applicationId "com.esri.arcgis.android.sample.runtimegeodb.roma"
+            versionName "1.0-roma"
+        }
+    }
 }
 
 dependencies {
