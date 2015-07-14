@@ -8,6 +8,8 @@
     <!-- Sign in with your ArcGIS developer account. -->
     <!-- Create an application. This will give you access to a client id string. -->
     <!-- Replace CLIENT_ID below with the client id string and run the sample -->
+    <!-- -->
+    <!-- The CLIENT_ID below is from developer's account 'marcofoi' -->
     <string name="client_id">C8DvOuv2DRNHtuV8</string>
     <string name="app_name">OAuth2Sample</string>
     <string name="login_type_dlg_message">Log in with saved credentials?</string>
