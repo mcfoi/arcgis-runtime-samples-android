@@ -1,2 +1,3 @@
 include ':CreateRuntimeGeodatabase',
-        ':OAuth2'
+        ':OAuth2',
+        ':FragmentManagement'
