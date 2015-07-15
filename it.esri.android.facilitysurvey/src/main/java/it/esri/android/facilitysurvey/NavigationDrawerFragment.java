@@ -19,7 +19,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 /**
@@ -54,9 +56,10 @@ public class NavigationDrawerFragment extends Fragment {
     private ListView mDrawerListView;
     private View mFragmentContainerView;
 
-    private int mCurrentSelectedPosition = 0;
+    private int mCurrentSelectedPosition = 3; // Corresponds to MapFragment.BASEMAP_NAME_TOPO
     private boolean mFromSavedInstanceState;
     private boolean mUserLearnedDrawer;
+    private ListAdapter mListViewArrayAdapter;
 
     public NavigationDrawerFragment() {
     }
@@ -64,6 +67,17 @@ public class NavigationDrawerFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mListViewArrayAdapter = new ArrayAdapter<String>(
+                getActionBar().getThemedContext(),
+                android.R.layout.simple_list_item_activated_1,
+                android.R.id.text1,
+                new String[]{
+                        MapFragment.BASEMAP_NAME_GRAY,
+                        MapFragment.BASEMAP_NAME_OCEANS,
+                        MapFragment.BASEMAP_NAME_STREETS,
+                        MapFragment.BASEMAP_NAME_TOPO
+                });
 
         // Read in the flag indicating whether or not the user has demonstrated awareness of the
         // drawer. See PREF_USER_LEARNED_DRAWER for details.
@@ -75,7 +89,7 @@ public class NavigationDrawerFragment extends Fragment {
             mFromSavedInstanceState = true;
         }
 
-        // Select either the default item (0) or the last selected item.
+        // Select either the default item (3 - MapFragment.BASEMAP_NAME_TOPO) or the last selected item.
         selectItem(mCurrentSelectedPosition);
     }
 
@@ -97,16 +111,7 @@ public class NavigationDrawerFragment extends Fragment {
                 selectItem(position);
             }
         });
-        mDrawerListView.setAdapter(new ArrayAdapter<String>(
-                getActionBar().getThemedContext(),
-                android.R.layout.simple_list_item_activated_1,
-                android.R.id.text1,
-                new String[]{
-                        MapFragment.BASEMAP_NAME_GRAY,
-                        MapFragment.BASEMAP_NAME_OCEANS,
-                        MapFragment.BASEMAP_NAME_STREETS,
-                        MapFragment.BASEMAP_NAME_TOPO
-                }));
+        mDrawerListView.setAdapter(mListViewArrayAdapter);
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
         return mDrawerListView;
     }
@@ -271,6 +276,19 @@ public class NavigationDrawerFragment extends Fragment {
         return ((ActionBarActivity) getActivity()).getSupportActionBar();
     }
 
+    /**
+     * Return the String ID of the currently selected Map
+     * Note that this method works just if no Header is set in mDrawerListView
+     * @return
+     */
+    public String getCurrentMapName() {
+
+        int firstPosition = mDrawerListView.getFirstVisiblePosition() - mDrawerListView.getHeaderViewsCount(); // This is the same as child #0
+        int wantedChild = mCurrentSelectedPosition - firstPosition;
+        TextView v = (TextView) mDrawerListView.getChildAt(wantedChild);
+        CharSequence mapName = v.getText();
+        return mapName.toString();
+    }
 
 
     /**
