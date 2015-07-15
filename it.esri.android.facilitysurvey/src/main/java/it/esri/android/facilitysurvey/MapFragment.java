@@ -228,4 +228,12 @@ public class MapFragment extends Fragment {
         return new ArcGISTiledMapServiceLayer(url);
     }
 
+    /**
+     * Return a reference to the current MapView object
+     * @return
+     */
+    public MapView getMapView() {
+        return mMapView;
+    }
+
 }
