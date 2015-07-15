@@ -1,4 +1,2 @@
-include ':CreateRuntimeGeodatabase',
-        ':OAuth2',
-        ':FragmentManagement',
+include ':OAuth2',
         ':it.esri.android.facilitysurvey'
