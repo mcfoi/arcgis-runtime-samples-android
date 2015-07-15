@@ -22,10 +22,13 @@ import android.widget.TextView;
 public class MainActivity extends ActionBarActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 
+    private static final String TAG_MAP_FRAGMENT = "MapFragment";
+
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
      */
     private NavigationDrawerFragment mNavigationDrawerFragment;
+    private MapFragment mMapFragment;
 
     /**
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
@@ -37,8 +40,25 @@ public class MainActivity extends ActionBarActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mNavigationDrawerFragment = (NavigationDrawerFragment)
-                getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
+        FragmentManager fragMgr = getSupportFragmentManager();
+
+        // Find existing fragments (if any)
+        mNavigationDrawerFragment = (NavigationDrawerFragment) getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
+        mMapFragment = (MapFragment) fragMgr.findFragmentByTag(TAG_MAP_FRAGMENT);
+
+        if (mMapFragment == null) {
+            // There's no existing map fragment, so create one
+            createMapFragment(MapFragment.BASEMAP_NAME_STREETS);
+        } else {
+            // There's an existing map fragment - need to remove it from main_fragment_container before we can add it to
+            // map_fragment_container_twopane
+            fragMgr.beginTransaction().remove(mMapFragment).commit();
+            fragMgr.executePendingTransactions();
+        }
+
+        // Display map fragment in container
+        fragMgr.beginTransaction().add(R.id.container, mMapFragment, TAG_MAP_FRAGMENT).commit();
+
         mTitle = getTitle();
 
         // Set up the drawer.
@@ -49,11 +69,28 @@ public class MainActivity extends ActionBarActivity
 
     @Override
     public void onNavigationDrawerItemSelected(int position) {
+
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction()
                 .replace(R.id.container, PlaceholderFragment.newInstance(position + 1))
                 .commit();
+
+        //String mapName = mNavigationDrawerFragment.getMapName(position);
+        //mMapFragment.changeBasemap(mapName);
+
+    }
+
+    /**
+     * Creates a new map fragment.
+     *
+     * @param id String identifier of basemap to display.
+     */
+    private void createMapFragment(String id) {
+        Bundle arguments = new Bundle();
+        arguments.putString(MapFragment.ARG_BASEMAP_ID, id);
+        mMapFragment = new MapFragment();
+        mMapFragment.setArguments(arguments);
     }
 
     public void onSectionAttached(int number) {

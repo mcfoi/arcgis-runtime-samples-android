@@ -13,7 +13,7 @@
 
 package it.esri.android.facilitysurvey;
 
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -48,9 +48,11 @@ public class MapFragment extends Fragment {
     // basemap layer
     private ArcGISTiledMapServiceLayer mBasemapLayer;
     // feature layers
+
     private ArcGISFeatureLayer mFeatureLayer0 = null;
     private ArcGISFeatureLayer mFeatureLayer1 = null;
     private ArcGISFeatureLayer mFeatureLayer2 = null;
+
     // current map state
     private String mMapState = null;
 
@@ -108,6 +110,7 @@ public class MapFragment extends Fragment {
             mBasemapLayer = createBasemapLayer(mBasemapName);
         }
 
+
         if (mFeatureLayer0 == null) {
             mFeatureLayer0 = new ArcGISFeatureLayer(
                     "http://sampleserver5.arcgisonline.com/ArcGIS/rest/services/LocalGovernment/Recreation/FeatureServer/0",
@@ -126,11 +129,14 @@ public class MapFragment extends Fragment {
                     ArcGISFeatureLayer.MODE.ONDEMAND);
         }
 
+
         // Add layers to MapView
         mMapView.addLayer(mBasemapLayer);
+
         mMapView.addLayer(mFeatureLayer0);
         mMapView.addLayer(mFeatureLayer1);
         mMapView.addLayer(mFeatureLayer2);
+
 
         // set logo and enable wrap around
         mMapView.enableWrapAround(true);
@@ -172,9 +178,11 @@ public class MapFragment extends Fragment {
 
         // Must remove our layers from MapView before calling recycle(), or we won't be able to reuse them
         mMapView.removeLayer(mBasemapLayer);
+
         mMapView.removeLayer(mFeatureLayer0);
         mMapView.removeLayer(mFeatureLayer1);
         mMapView.removeLayer(mFeatureLayer2);
+
 
         // Release MapView resources
         mMapView.recycle();

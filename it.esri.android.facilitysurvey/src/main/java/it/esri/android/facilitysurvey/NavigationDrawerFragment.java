@@ -102,9 +102,10 @@ public class NavigationDrawerFragment extends Fragment {
                 android.R.layout.simple_list_item_activated_1,
                 android.R.id.text1,
                 new String[]{
-                        getString(R.string.title_section1),
-                        getString(R.string.title_section2),
-                        getString(R.string.title_section3),
+                        MapFragment.BASEMAP_NAME_GRAY,
+                        MapFragment.BASEMAP_NAME_OCEANS,
+                        MapFragment.BASEMAP_NAME_STREETS,
+                        MapFragment.BASEMAP_NAME_TOPO
                 }));
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
         return mDrawerListView;
@@ -269,6 +270,8 @@ public class NavigationDrawerFragment extends Fragment {
     private ActionBar getActionBar() {
         return ((ActionBarActivity) getActivity()).getSupportActionBar();
     }
+
+
 
     /**
      * Callbacks interface that all activities using this fragment must implement.
