@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="portal_url">https://www.arcgis.com/</string>
+    <string name="portal_url">https://www.arcgis.com</string>
     <string name="credentials_filename">serialized_credentials</string>
     <string name="secret_key_filename">secretkey.dat</string>
     <!-- Follow these steps to Set the client id string if you don't already have one: -->
