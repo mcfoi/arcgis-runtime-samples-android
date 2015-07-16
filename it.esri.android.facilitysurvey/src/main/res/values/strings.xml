@@ -9,7 +9,7 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_download">Download GeoDB</string>
-    <string name="action_settings">Settings</string>
+    <string name="action_login">Login</string>
 
     <string name="sdcard_offline_dir">FacilitySurvey</string>
     <string name="featureservice_url">http://services.arcgis.com/lY0By1TVrNVXFf6Y/arcgis/rest/services/Livello_modificabile_WGS84/FeatureServer</string>

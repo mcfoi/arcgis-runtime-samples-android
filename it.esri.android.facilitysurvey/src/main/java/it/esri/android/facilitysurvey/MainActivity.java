@@ -2,7 +2,9 @@ package it.esri.android.facilitysurvey;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.net.Uri;
 import android.os.Environment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -16,12 +18,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.support.v4.widget.DrawerLayout;
+import android.widget.Toast;
 
 import com.esri.android.map.FeatureLayer;
 import com.esri.android.map.MapView;
+import com.esri.android.oauth.OAuthView;
 import com.esri.core.ags.FeatureServiceInfo;
 import com.esri.core.geodatabase.Geodatabase;
 import com.esri.core.geodatabase.GeodatabaseFeatureTable;
+import com.esri.core.io.UserCredentials;
 import com.esri.core.map.CallbackListener;
 import com.esri.core.tasks.geodatabase.GenerateGeodatabaseParameters;
 import com.esri.core.tasks.geodatabase.GeodatabaseStatusCallback;
@@ -33,10 +38,11 @@ import java.io.FileNotFoundException;
 
 
 public class MainActivity extends ActionBarActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks {
+        implements NavigationDrawerFragment.NavigationDrawerCallbacks, Oauth2Fragment.OnFragmentInteractionListener, Oauth2Fragment.OnUserCredentialsRetrieved {
 
     protected static final String LOG_TAG = "FacilitySurvey";
     private static final String TAG_MAP_FRAGMENT = "MapFragment";
+    private static final String TAG_LOGIN_FRAGMENT = "OAuth2Fragment";
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -44,6 +50,7 @@ public class MainActivity extends ActionBarActivity
     private Context context;
     private NavigationDrawerFragment mNavigationDrawerFragment;
     private MapFragment mMapFragment;
+    private Oauth2Fragment mOAuthFragment;
 
     /**
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
@@ -55,6 +62,7 @@ public class MainActivity extends ActionBarActivity
     protected static String OFFLINE_FILE_EXTENSION = ".geodatabase";
     private ProgressDialog mProgressDialog;
     static GeodatabaseSyncTask gdbSyncTask;
+    private UserCredentials mCurrentUserLoginCredentials;
 
 
     @Override
@@ -69,6 +77,7 @@ public class MainActivity extends ActionBarActivity
         // Find existing fragments (if any)
         mNavigationDrawerFragment = (NavigationDrawerFragment) getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
         mMapFragment = (MapFragment) fragMgr.findFragmentByTag(TAG_MAP_FRAGMENT);
+        mOAuthFragment = createOAuth2Fragment();
 
         if (mMapFragment == null) {
             // There's no existing map fragment, so create one
@@ -128,6 +137,38 @@ public class MainActivity extends ActionBarActivity
         mMapFragment.setArguments(arguments);
     }
 
+    /**
+     * Create an OAuth2 fragment
+     */
+    private Oauth2Fragment createOAuth2Fragment(){
+
+        Bundle arguments = new Bundle();
+        //arguments.putString(MapFragment.ARG_BASEMAP_ID, id);
+        Oauth2Fragment fragment = new Oauth2Fragment();
+        fragment.setArguments(arguments);
+
+        return fragment;
+    }
+
+
+    /**
+     * Setter for UserCredentials
+     *
+     * @param credentials
+     */
+    public void setCredentials(UserCredentials credentials) {
+        mCurrentUserLoginCredentials = credentials;
+    }
+
+    /**
+     * Returns current user credentials
+     *
+     * @return UserCredentials
+     */
+    public UserCredentials getCredentials() {
+        return mCurrentUserLoginCredentials;
+    }
+
     /*
 	 * Create the geodatabase file location and name structure
 	 */
@@ -182,25 +223,34 @@ public class MainActivity extends ActionBarActivity
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        // handle menu item selection
+        boolean retVal = false;
         switch (item.getItemId()) {
             case R.id.action_download:
                 downloadData(fServiceUrl);
-                return true;
+                retVal = true;
+                break;
             case R.id.action_settings:
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+                openOAuth2Fragment();
+                retVal = true;
+                break;
         }
+        return retVal;
     }
 
+    /**
+     * Add OAuth2Fragment to MainActivity
+     */
+    private void openOAuth2Fragment() {
+
+        FragmentManager fragMgr = getSupportFragmentManager();
+        FragmentTransaction transaction = fragMgr.beginTransaction();
+        // Replace whatever is in the container view with this fragment,
+        // and add the transaction to the back stack so the user can navigate back
+        transaction.replace(R.id.container, mOAuthFragment, TAG_LOGIN_FRAGMENT);
+        transaction.addToBackStack(null);
+        // Commit the transaction
+        transaction.commit();
+    }
 
     /**
      * Create the GeodatabaseTask from the feature service URL w/o credentials.
@@ -278,11 +328,24 @@ public class MainActivity extends ActionBarActivity
 
         // create the fully qualified path for geodatabase file
         String geoDbFilename = fromServiceURLtoServiceNameNoSpaces(fServiceUrl);
-         String localGdbFilePath = createGeodatabaseFilePath(geoDbFilename);
+        String localGdbFilePath = createGeodatabaseFilePath(geoDbFilename);
 
-        // get geodatabase based on params
-        submitTask(params, localGdbFilePath, statusCallback,
-                gdbResponseCallback);
+        int last = localGdbFilePath.lastIndexOf("/");
+        String path = localGdbFilePath.substring(0, last);
+        File storagePathFile = new File(path);
+        // submit task
+        boolean canWrite = true;
+        if (!storagePathFile.isDirectory()){
+            canWrite = false;
+            canWrite = storagePathFile.mkdirs();
+        }
+        if (canWrite) {
+            // get geodatabase based on params
+            submitTask(params, localGdbFilePath, statusCallback,
+                    gdbResponseCallback);
+        } else {
+            setProgressDialogMessage(this, "Cannot write to local folder!\nNo database downloaded.");
+        }
     }
 
 
@@ -294,9 +357,9 @@ public class MainActivity extends ActionBarActivity
                                    String file,
                                    GeodatabaseStatusCallback statusCallback,
                                    CallbackListener<String> gdbResponseCallback) {
-        // submit task
+
         gdbSyncTask.generateGeodatabase(params, file, false, statusCallback,
-                gdbResponseCallback);
+                    gdbResponseCallback);
     }
 
     /**
@@ -352,6 +415,20 @@ public class MainActivity extends ActionBarActivity
                 }
             }
         }
+    }
+
+    @Override
+    public void onUserCredentialsRetrieved(UserCredentials credentials) {
+
+        setCredentials(credentials);
+
+    }
+
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
+        Toast.makeText(this, "An interaction with a Fragment occurred", Toast.LENGTH_SHORT).show();
+
     }
 
     /**
