@@ -33,6 +33,9 @@ import com.esri.core.geometry.SpatialReference;
  * and a number of feature layers in a MapView.
  */
 public class MapFragment extends Fragment {
+
+    protected static final String LOG_TAG = "FacilitySurvey";
+
     /** Fragment argument representing a String ID of the currently selected basemap */
     public static final String ARG_BASEMAP_ID = "BasemapId";
     public static final String BASEMAP_NAME_STREETS = "Streets";
@@ -99,8 +102,8 @@ public class MapFragment extends Fragment {
         // otherwise set initial extent
         if (mMapState == null) {
             SpatialReference mSR = SpatialReference.create(3857);
-            Point p1 = GeometryEngine.project(-120.0, 0.0, mSR);
-            Point p2 = GeometryEngine.project(-60.0, 50.0, mSR);
+            Point p1 = GeometryEngine.project(12.65, 41.97, mSR);
+            Point p2 = GeometryEngine.project(12.35, 41.78, mSR);
             Envelope mInitExtent = new Envelope(p1.getX(), p1.getY(), p2.getX(), p2.getY());
             mMapView.setExtent(mInitExtent);
         } else {
