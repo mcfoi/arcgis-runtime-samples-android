@@ -300,12 +300,14 @@ public class MainActivity extends ActionBarActivity
             @Override
             public void onError(final Throwable e) {
                 Log.e(LOG_TAG, "Error creating geodatabase");
+                setProgressDialogMessage((MainActivity) context, "");
                 mProgressDialog.dismiss();
             }
 
             @Override
             public void onCallback(String path) {
                 Log.i(LOG_TAG, "Geodatabase is: " + path);
+                setProgressDialogMessage((MainActivity) context, "");
                 mProgressDialog.dismiss();
                 // update map with local feature layer from geodatabase
                 updateFeatureLayer(path);
