@@ -56,7 +56,7 @@ public class NavigationDrawerFragment extends Fragment {
     private ListView mDrawerListView;
     private View mFragmentContainerView;
 
-    private int mCurrentSelectedPosition = 3; // Corresponds to MapFragment.BASEMAP_NAME_TOPO
+    private int mCurrentSelectedPosition = 2; // Corresponds to MapFragment.BASEMAP_NAME_STREETS
     private boolean mFromSavedInstanceState;
     private boolean mUserLearnedDrawer;
     private ListAdapter mListViewArrayAdapter;
