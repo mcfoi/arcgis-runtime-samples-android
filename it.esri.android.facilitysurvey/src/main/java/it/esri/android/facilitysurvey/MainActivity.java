@@ -2,6 +2,7 @@ package it.esri.android.facilitysurvey;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Environment;
 import android.support.v4.app.FragmentTransaction;
@@ -21,10 +22,12 @@ import android.support.v4.widget.DrawerLayout;
 import android.widget.Toast;
 
 import com.esri.android.map.FeatureLayer;
+import com.esri.android.map.Layer;
 import com.esri.android.map.MapView;
 import com.esri.core.ags.FeatureServiceInfo;
 import com.esri.core.geodatabase.Geodatabase;
 import com.esri.core.geodatabase.GeodatabaseFeatureTable;
+import com.esri.core.geometry.Envelope;
 import com.esri.core.io.UserCredentials;
 import com.esri.core.map.CallbackListener;
 import com.esri.core.tasks.geodatabase.GenerateGeodatabaseParameters;
@@ -109,8 +112,27 @@ public class MainActivity extends ActionBarActivity
         // create service layer
         fServiceUrl = this.getResources().getString(R.string.featureservice_url);
 
-        mProgressDialog = new ProgressDialog(context);
+        mProgressDialog = new SelfCleaningProgressDialog(context);
         mProgressDialog.setTitle("Create local runtime geodatabase");
+    }
+
+    class SelfCleaningProgressDialog extends ProgressDialog {
+
+        private OnDismissListener customListener;
+        private SelfCleaningProgressDialog myDialog;
+
+        public SelfCleaningProgressDialog(Context context) {
+            super(context);
+            myDialog = this;
+            customListener = new OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    myDialog.setMessage("");
+                }
+            };
+
+            setOnDismissListener(customListener);
+        }
     }
 
     @Override
@@ -145,24 +167,23 @@ public class MainActivity extends ActionBarActivity
      * Create an OAuth2 fragment
      */
     private Oauth2Fragment createOAuth2Fragment(){
-
         Bundle arguments = new Bundle();
         //arguments.putString(MapFragment.ARG_BASEMAP_ID, id);
         Oauth2Fragment fragment = new Oauth2Fragment();
         fragment.setArguments(arguments);
-
         return fragment;
     }
 
 
     /**
-     * Setter for UserCredentials
+     * Sets for UserCredentials and closes OAuth2Fragment returning to previous fragment on Stack
      *
      * @param credentials
      */
-    public void setCredentials(UserCredentials credentials) {
+    public void setCredentialsAndPopBack(UserCredentials credentials) {
         mCurrentUserLoginCredentials = credentials;
-        getFragmentManager().popBackStackImmediate();
+        FragmentManager fM = getSupportFragmentManager();
+        fM.popBackStack();
     }
 
     /**
@@ -266,14 +287,18 @@ public class MainActivity extends ActionBarActivity
         mProgressDialog.show();
         // create the GeodatabaseTask
 
-        gdbSyncTask = new GeodatabaseSyncTask(url, null);
+        gdbSyncTask = new GeodatabaseSyncTask(url, mCurrentUserLoginCredentials);
         gdbSyncTask.fetchFeatureServiceInfo(new CallbackListener<FeatureServiceInfo>() {
 
             @Override
             public void onError(Throwable arg0) {
                 Log.e(LOG_TAG, "Error fetching FeatureServiceInfo");
                 if (arg0 instanceof com.esri.core.io.EsriSecurityException) {
-                    setProgressDialogMessage((MainActivity) context, "The requested FeatureService requires authentication.\nPlease, proceed to Login.");
+                    if (mCurrentUserLoginCredentials == null) {
+                        setProgressDialogMessage((MainActivity) context, "The requested FeatureService requires authentication.\nPlease, proceed to Login.");
+                    } else {
+                        setProgressDialogMessage((MainActivity) context, "The current User cannot access the requested FeatureService.\nPlease, login with a different user.");
+                    }
                 } else {
                     setProgressDialogMessage((MainActivity) context, "An generic error occurred: could not perform download");
                 }
@@ -376,7 +401,7 @@ public class MainActivity extends ActionBarActivity
                                    CallbackListener<String> gdbResponseCallback) {
 
         gdbSyncTask.generateGeodatabase(params, file, false, statusCallback,
-                    gdbResponseCallback);
+                gdbResponseCallback);
     }
 
     /**
@@ -424,12 +449,31 @@ public class MainActivity extends ActionBarActivity
         // and/or spatial data. If GdbFeatureTable has geometry add it to
         // the MapView as a Feature Layer
         if (localGdb != null) {
+            Envelope dataExtent = new Envelope();
+            removeAllFeatureLayers();
             for (GeodatabaseFeatureTable gdbFeatureTable : localGdb
                     .getGeodatabaseTables()) {
                 if (gdbFeatureTable.hasGeometry()){
                     mMapFragment.getMapView().addLayer(new FeatureLayer(gdbFeatureTable));
-
+                    Envelope layerEnv = gdbFeatureTable.getExtent();
+                    dataExtent.merge(layerEnv);
                 }
+            }
+            if (!dataExtent.isEmpty()) {
+                mMapFragment.getMapView().zoomTo(dataExtent.getCenter(), 1.0f);
+            }
+        }
+    }
+
+    /**
+     * Removes all FeatureLayer from current MapView
+     */
+    private void removeAllFeatureLayers() {
+
+        Layer[] layers = mMapFragment.getMapView().getLayers();
+        for (Layer l : layers) {
+            if (l instanceof com.esri.android.map.FeatureLayer){
+                mMapFragment.getMapView().removeLayer(l);
             }
         }
     }
@@ -437,7 +481,7 @@ public class MainActivity extends ActionBarActivity
     @Override
     public void onUserCredentialsRetrieved(UserCredentials credentials) {
 
-        setCredentials(credentials);
+        setCredentialsAndPopBack(credentials);
 
     }
 
