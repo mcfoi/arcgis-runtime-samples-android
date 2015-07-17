@@ -22,7 +22,6 @@ import android.widget.Toast;
 
 import com.esri.android.map.FeatureLayer;
 import com.esri.android.map.MapView;
-import com.esri.android.oauth.OAuthView;
 import com.esri.core.ags.FeatureServiceInfo;
 import com.esri.core.geodatabase.Geodatabase;
 import com.esri.core.geodatabase.GeodatabaseFeatureTable;
@@ -42,7 +41,7 @@ public class MainActivity extends ActionBarActivity
 
     protected static final String LOG_TAG = "FacilitySurvey";
     private static final String TAG_MAP_FRAGMENT = "MapFragment";
-    private static final String TAG_LOGIN_FRAGMENT = "OAuth2Fragment";
+    private static final String TAG_OAUTH2_FRAGMENT = "OAuth2Fragment";
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -77,7 +76,7 @@ public class MainActivity extends ActionBarActivity
         // Find existing fragments (if any)
         mNavigationDrawerFragment = (NavigationDrawerFragment) getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
         mMapFragment = (MapFragment) fragMgr.findFragmentByTag(TAG_MAP_FRAGMENT);
-        mOAuthFragment = createOAuth2Fragment();
+        mOAuthFragment = (Oauth2Fragment) fragMgr.findFragmentByTag(TAG_OAUTH2_FRAGMENT);
 
         if (mMapFragment == null) {
             // There's no existing map fragment, so create one
@@ -92,6 +91,11 @@ public class MainActivity extends ActionBarActivity
         // Display map fragment in container
         fragMgr.beginTransaction().add(R.id.container, mMapFragment, TAG_MAP_FRAGMENT).commit();
 
+        if (mOAuthFragment == null) {
+            mOAuthFragment = createOAuth2Fragment();
+        } else {
+            showOAuth2Fragment();
+        }
         mTitle = getTitle();
 
         // Set up the drawer.
@@ -231,7 +235,7 @@ public class MainActivity extends ActionBarActivity
                 retVal = true;
                 break;
             case R.id.action_settings:
-                openOAuth2Fragment();
+                showOAuth2Fragment();
                 retVal = true;
                 break;
         }
@@ -241,13 +245,13 @@ public class MainActivity extends ActionBarActivity
     /**
      * Add OAuth2Fragment to MainActivity
      */
-    private void openOAuth2Fragment() {
+    private void showOAuth2Fragment() {
 
         FragmentManager fragMgr = getSupportFragmentManager();
         FragmentTransaction transaction = fragMgr.beginTransaction();
         // Replace whatever is in the container view with this fragment,
         // and add the transaction to the back stack so the user can navigate back
-        transaction.replace(R.id.container, mOAuthFragment, TAG_LOGIN_FRAGMENT);
+        transaction.replace(R.id.container, mOAuthFragment, TAG_OAUTH2_FRAGMENT);
         transaction.addToBackStack(null);
         // Commit the transaction
         transaction.commit();

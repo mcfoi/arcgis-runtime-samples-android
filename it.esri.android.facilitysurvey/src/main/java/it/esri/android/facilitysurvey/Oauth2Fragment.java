@@ -88,6 +88,12 @@ public class Oauth2Fragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        /** Calling setRetainInstance() causes the Fragment instance to be retained
+         * when its Activity is destroyed and recreated. This allows map Layer
+         * objects to be retained so data will not need to be fetched from the network again.
+         */
+        setRetainInstance(true);
+
         mContext = getActivity().getApplicationContext();
 
         if (getArguments() != null) {
