@@ -158,6 +158,7 @@ public class MainActivity extends ActionBarActivity
      */
     public void setCredentials(UserCredentials credentials) {
         mCurrentUserLoginCredentials = credentials;
+        getFragmentManager().popBackStackImmediate();
     }
 
     /**
@@ -342,9 +343,19 @@ public class MainActivity extends ActionBarActivity
             canWrite = storagePathFile.mkdirs();
         }
         if (canWrite) {
-            // get geodatabase based on params
-            submitTask(params, localGdbFilePath, statusCallback,
-                    gdbResponseCallback);
+            File localGdbFile = new File(localGdbFilePath);
+            boolean couldDelete = true;
+            if (localGdbFile.exists()) {
+                couldDelete = false;
+                couldDelete = localGdbFile.delete();
+            }
+            if (couldDelete) {
+                // get geodatabase based on params
+                submitTask(params, localGdbFilePath, statusCallback,
+                        gdbResponseCallback);
+            } else {
+                setProgressDialogMessage(this, "Cannot delete preexisting file!\nNo database downloaded.");
+            }
         } else {
             setProgressDialogMessage(this, "Cannot write to local folder!\nNo database downloaded.");
         }
