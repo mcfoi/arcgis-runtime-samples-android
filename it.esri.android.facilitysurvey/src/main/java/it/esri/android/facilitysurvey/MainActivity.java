@@ -45,6 +45,9 @@ public class MainActivity extends ActionBarActivity
     protected static final String LOG_TAG = "FacilitySurvey";
     private static final String TAG_MAP_FRAGMENT = "MapFragment";
     private static final String TAG_OAUTH2_FRAGMENT = "OAuth2Fragment";
+    public static final String KEY_USER_CREDENTIALS_PWD = "KEY_USER_CREDENTIALS_PWD";
+    public static final String KEY_USER_CREDENTIALS_USR = "KEY_USER_CREDENTIALS_USR";
+    public static final String KEY_USER_CREDENTIALS_TKN = "KEY_USER_CREDENTIALS_TKN";
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -66,11 +69,36 @@ public class MainActivity extends ActionBarActivity
     static GeodatabaseSyncTask gdbSyncTask;
     private UserCredentials mCurrentUserLoginCredentials;
 
+    /**
+     * Returns an instance of UserCredential from savedInstanceState Bundle
+     * @param savedInstanceState
+     * @return
+     */
+    private UserCredentials getUserCredentialsFromSavedInstanceState(Bundle savedInstanceState) {
+        UserCredentials uc = new UserCredentials();
+        String pwd = savedInstanceState.getString(KEY_USER_CREDENTIALS_PWD, "");
+        String usr = savedInstanceState.getString(KEY_USER_CREDENTIALS_USR, "");
+        String tkn = savedInstanceState.getString(KEY_USER_CREDENTIALS_TKN, "");
+        if (pwd != "" && usr != ""){
+            uc.setUserAccount(usr, pwd);
+            return uc;
+        } else if (tkn != ""){
+            // TODO : check if the referer is the Client_ID or something else!!
+            uc.setUserToken(tkn, getResources().getString(R.string.client_id));
+            return uc;
+        } else {
+            return null;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        if( savedInstanceState != null ) {
+            mCurrentUserLoginCredentials = getUserCredentialsFromSavedInstanceState(savedInstanceState);
+        }
 
         context = this;
 
@@ -228,6 +256,24 @@ public class MainActivity extends ActionBarActivity
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
         actionBar.setDisplayShowTitleEnabled(true);
         actionBar.setTitle(mTitle);
+    }
+
+
+    @Override
+    public void onSaveInstanceState(Bundle outState){
+        if (mCurrentUserLoginCredentials != null) {
+            String pwd = mCurrentUserLoginCredentials.getPassword();
+            String usr = mCurrentUserLoginCredentials.getUserName();
+            String tkn = mCurrentUserLoginCredentials.getToken();
+
+            if (pwd != null) {
+                outState.putString(KEY_USER_CREDENTIALS_PWD, pwd);
+                outState.putString(KEY_USER_CREDENTIALS_USR, usr);
+            } else {
+                outState.putString(KEY_USER_CREDENTIALS_TKN, usr);
+            }
+        }
+        super.onSaveInstanceState(outState);
     }
 
 
